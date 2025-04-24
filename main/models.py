@@ -2,15 +2,13 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.exceptions import ValidationError
 
-
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('ADMIN', 'Admin'),
-        ('TEACHER', 'Teacher'),
+        ('TEACHER', 'Mentor'),
         ('STUDENT', 'Student'),
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-
 
 class Course(models.Model):
     name = models.CharField(max_length=100)
@@ -18,10 +16,11 @@ class Course(models.Model):
     def __str__(self):
         return self.name
 
-
 class Mentor(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'TEACHER'})
+    user = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'role': 'TEACHER'})
     name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='images/', null=True, blank=True)
+    birthday = models.DateField(null=True, blank=True)
     point_limit = models.IntegerField()
     course = models.ManyToManyField(Course)
 
@@ -31,7 +30,6 @@ class Mentor(models.Model):
     class Meta:
         verbose_name = "Mentor"
         verbose_name_plural = "Mentors"
-
 
 class Group(models.Model):
     name = models.CharField(max_length=100)
@@ -46,9 +44,8 @@ class Group(models.Model):
         verbose_name = "Group"
         verbose_name_plural = "Groups"
 
-
 class Student(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'STUDENT'})
+    user = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'role': 'STUDENT'})
     name = models.CharField(max_length=100)
     birth_date = models.DateField()
     image = models.ImageField(upload_to="images/", null=True, blank=True)
@@ -70,6 +67,7 @@ class Test(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     created_by = models.ForeignKey(Mentor, on_delete=models.CASCADE)
+    duration_minutes = models.PositiveIntegerField(default=30)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -79,10 +77,24 @@ class Test(models.Model):
 class Question(models.Model):
     test = models.ForeignKey(Test, related_name='questions', on_delete=models.CASCADE)
     text = models.TextField()
-    correct_answer = models.CharField(max_length=255)
 
     def __str__(self):
         return self.text
+
+
+class AnswerOption(models.Model):
+    question = models.ForeignKey(Question, related_name='options', on_delete=models.CASCADE)
+    label = models.CharField(max_length=1, choices=[('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D')])
+    text = models.CharField(max_length=255)
+    is_correct = models.BooleanField(default=False)
+
+    @property
+    def test(self):
+        return self.question.test
+
+    def __str__(self):
+        return f"{self.question.text[:30]}... ({self.label})"
+
 
 class StudentTestResult(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
@@ -90,52 +102,54 @@ class StudentTestResult(models.Model):
     score = models.PositiveIntegerField(default=0)
     taken_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('student', 'test')
+
     def update_score(self):
-        correct_count = self.answers.filter(is_correct=True).count()
-        self.score = correct_count * 5
+        correct_answers = self.answers.filter(is_correct=True).count()
+        self.score = correct_answers * 5
         self.save()
 
         if self.score > 0:
+            self.student.points += self.score
             self.student.point_history.append({
                 'amount': self.score,
-                'point_type': 'test',  # Points coming from a test
-                'description': f"Points earned from test '{self.test.title}'",
-                'date': self.taken_at,
+                'point_type': 'test',
+                'description': f"Testdan ball: {self.test.title}",
+                'date': self.taken_at.isoformat(),
             })
             self.student.save()
 
     def __str__(self):
-        return f"{self.student.name} - {self.test.title} - {self.score} coins"
+        return f"{self.student.name} - {self.test.title} - {self.score} ball"
 
 class StudentAnswer(models.Model):
     result = models.ForeignKey(StudentTestResult, related_name='answers', on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    answer = models.CharField(max_length=255)
+    answer_option = models.ForeignKey(AnswerOption, on_delete=models.CASCADE)
     is_correct = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        self.is_correct = self.answer.strip().lower() == self.question.correct_answer.strip().lower()
+        self.is_correct = self.answer_option.is_correct
 
         is_new = self._state.adding
         super().save(*args, **kwargs)
 
-        if is_new and self.is_correct:
-            self.result.student.points += 5
-            self.result.student.save()
+        if is_new:
+            if self.is_correct:
+                self.result.student.points += 5
+                self.result.student.point_history.append({
+                    'amount': 5,
+                    'point_type': 'test',
+                    'description': f"To‘g‘ri javob: {self.question.text}",
+                    'date': self.result.taken_at.isoformat(),
+                })
+                self.result.student.save()
 
-            # Add the "From Test" point to history
-            self.result.student.point_history.append({
-                'amount': 5,
-                'point_type': 'test',
-                'description': f"Correct answer for {self.question.text}",
-                'date': self.result.taken_at,
-            })
-            self.result.student.save()
-
-        self.result.update_score()
+            self.result.update_score()
 
     def __str__(self):
-        return f"{self.result.student.name} -> {self.question.text} = {self.answer}"
+        return f"{self.result.student.name}: {self.question.text[:30]} → {self.answer_option.label}"
 
 class GivePoint(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
@@ -143,7 +157,6 @@ class GivePoint(models.Model):
     amount = models.PositiveIntegerField(default=0)
     description = models.TextField(null=True ,blank=True)
     point_type = models.CharField(max_length=20, choices=[('mentor', 'From Mentor'), ('test', 'From Test')], default='mentor')
-    date = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -153,14 +166,21 @@ class GivePoint(models.Model):
         if self.amount > self.mentor.point_limit:
             raise ValidationError(f"Mentor can give max {self.mentor.point_limit} points")
 
-
     def save(self, *args, **kwargs):
         self.student.points += self.amount
         self.student.point_history.append({
             'amount': self.amount,
             'point_type': self.point_type,
             'description': self.description,
-            'date': self.date,
         })
         self.student.save()
         super().save(*args, **kwargs)
+
+class Achievement(models.Model):
+    image = models.ImageField(upload_to='media/achievements/', null=True, blank=True)
+    name = models.CharField(max_length=255)
+    amount = models.PositiveIntegerField(default=0)
+    point_price = models.PositiveIntegerField()
+
+    def __str__(self):
+        return self.name

@@ -38,7 +38,8 @@ urlpatterns += [
 
 urlpatterns += [
     path('users/get-me/', UserDetailView.as_view(), name='user-details'),
-    path('courses/', CourseListCreateView.as_view(), name='courses'),
+    path('courses/', CourseListView.as_view(), name='courses'),
+    path('courses/create/', CourseCreateView.as_view(), name='courses'),
     path('courses/<int:pk>/', CourseRetrieveUpdateDestroyView.as_view()),
     path('groups/', GroupListCreateView.as_view(), name='groups'),
     path('groups/<int:pk>/', GroupRetrieveUpdateDestroyView.as_view()),
@@ -50,4 +51,29 @@ urlpatterns += [
     path('students/get-me/', StudentDetailView.as_view(), name='student-details'),
     path('give-points/', GivePointListCreateView.as_view(), name='give_points'),
     path('give-points/<int:pk>/', GivePointRetrieveUpdateDestroyView.as_view()),
+
+    path('test/' , TestListView.as_view(), name='test-list'),
+    path('student/test/' , StudentTestListView.as_view(), name='test-list'),
+    path('test/create/' , TestCreatView.as_view(),),
+    path('test/<int:pk>/', TestRetrieveUpdateDestroyView.as_view()),
+    path('students/test/result/', StudentTestResultListCreateView.as_view(), name='test-result'),
+    path('student/test/result/<int:pk>' , StudentTestResultRetrieveUpdateDestroyView.as_view()),
+    path('student/test/result/get-me/', StudentTestDetailView.as_view(), name='test-result-get-me'),
+    path('students/answer/', StudentAnswerListView.as_view(), name='test-answer'),
+    path('students/answer/create/', StudentAnswerCreateView.as_view(),),
+    path('student/answer/<int:pk>/', StudentAnswerRetrieveUpdateDestroyView.as_view()),
+
+
+    path('quesion/' , QuestionListView.as_view(), name='question-list'),
+    path('quesion/<int:pk>/' , QuestionRetrieveUpdateDestroyView.as_view()),
+    path('quesion/create/', QuestionCreateView.as_view(), name='question-create'),
+
+    path('answer/', AnswerOptionListView.as_view(), name='answer-option-list'),
+    path('answer/create/', AnswerOptionCreateView.as_view(), name='answer-option-create'),
+    path('answer/<int:pk>/' , AnswerOptionRetrieveUpdateDestroyView.as_view()),
+
+    path('achievement/' , AchievementListCreateView.as_view(), name='achievement-list'),
+    path('achievement/<int:pk>/' ,AchievementRetrieveUpdateDestroyView.as_view() ),
+    path('api/tests/submit/', SubmitTestView.as_view(), name='submit-test'),
+
 ]

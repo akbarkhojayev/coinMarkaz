@@ -124,13 +124,46 @@ DATABASES = {
 }
 
 
+# JAZZMIN_SETTINGS = {
+#     'site_title': 'Euro Site',
+#     'site_header': 'Euro Site',
+#     'site_brand': 'Euro Site',
+#     'welcome_sign': 'Welcome to Euro Site!',
+#     'show_ui_builder': True,
+#     "copyright": "O‘quv Markazi",
+#     "navigation_expanded": True,
+#     "topmenu_links": [
+#         {"name": "Bosh sahifa", "url": "/", "new_window": True},
+#     ],
+#     "hide_apps": ["auth"],
+# }
+
 JAZZMIN_SETTINGS = {
-    'site_title': 'Euro Gamification',
-    'site_header': 'Euro Gamification',
-    'site_brand': 'Euro Gamification',
-    'welcome_sign': 'Welcome to Euro Gamification!',
-    'show_ui_builder': True,
+    "site_title": "Euro Admin Paneli",
+    "site_header": "Euro Admin Dashboard",
+    "site_brand": "Euro Admin",
+    "welcome_sign": "Assalomu alaykum!",
+    "site_logo": "images/logo.png",
+    "search_model": "main.Student",
+    "topmenu_links": [
+        {"model": "main.Student"},
+        {"model": "main.Mentor"},
+        {"model": "main.Test"},
+    ],
+    "related_modal_active": True,
+    "show_sidebar": True,
+    "navigation_expanded": False,
+    "custom_links": {
+        "main.Student": [{
+            "name": "Import Talabalar",
+            "url": "https://docs.google.com/",
+            "icon": "fas fa-upload",
+            "new_window": True
+        }],
+    },
+    "default_theme": "darkly",
 }
+
 
 
 # Password validation
@@ -183,4 +216,3 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'main.User'
-
