@@ -49,11 +49,11 @@ urlpatterns += [
     path('students/', StudentListCreateView.as_view(), name='students'),
     path('students/<int:pk>/', StudentRetrieveUpdateDestroyView.as_view()),
     path('students/get-me/', StudentDetailView.as_view(), name='student-details'),
-    path('give-points/', GivePointListCreateView.as_view(), name='give_points'),
+    path('give-points/', GivePointCreateView.as_view()),
+    path('give-points/list/', GivePointListView.as_view(), name='give_points'),
     path('give-points/<int:pk>/', GivePointRetrieveUpdateDestroyView.as_view()),
 
     path('test/' , TestListView.as_view(), name='test-list'),
-    path('student/test/' , StudentTestListView.as_view(), name='test-list'),
     path('test/create/' , TestCreatView.as_view(),),
     path('test/<int:pk>/', TestRetrieveUpdateDestroyView.as_view()),
     path('students/test/result/', StudentTestResultListCreateView.as_view(), name='test-result'),
@@ -63,7 +63,7 @@ urlpatterns += [
     path('students/answer/create/', StudentAnswerCreateView.as_view(),),
     path('student/answer/<int:pk>/', StudentAnswerRetrieveUpdateDestroyView.as_view()),
 
-
+    path('quesion/option/create/' , QuestionWithOptionsCreateView.as_view(), name='question-with-options'),
     path('quesion/' , QuestionListView.as_view(), name='question-list'),
     path('quesion/<int:pk>/' , QuestionRetrieveUpdateDestroyView.as_view()),
     path('quesion/create/', QuestionCreateView.as_view(), name='question-create'),
@@ -74,6 +74,8 @@ urlpatterns += [
 
     path('achievement/' , AchievementListCreateView.as_view(), name='achievement-list'),
     path('achievement/<int:pk>/' ,AchievementRetrieveUpdateDestroyView.as_view() ),
-    path('api/tests/submit/', SubmitTestView.as_view(), name='submit-test'),
+    path('api/tests/submit/', SubmitTestAPIView.as_view(), name='submit-test'),
+    path('api/test-submission-log/', TestSubmissionLogAPIView.as_view(), name='test-submission-log'),
+
 
 ]

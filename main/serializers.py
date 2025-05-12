@@ -68,11 +68,6 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = '__all__'
 
-class QuestionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Question
-        fields = '__all__'
-
 class StudentTestResultSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
     test_title = serializers.SerializerMethodField()
@@ -115,7 +110,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     test_title = serializers.SerializerMethodField()
     class Meta:
         model = Question
-        fields = ['id', 'text', 'test_description', 'test_title', 'test']
+        fields = ['id', 'text', 'image', 'test_description', 'test_title', 'test']
 
     def get_test_description(self, obj):
         return obj.test.description
@@ -129,13 +124,35 @@ class AnswerOptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AnswerOption
-        fields = ['id', 'question', 'question_text', 'test_id', 'label', 'text', 'is_correct']
+        fields = ['id', 'question', 'question_text', 'test_id', 'label', 'image', 'text', 'is_correct']
 
     def get_test_id(self, obj):
         return obj.question.test.id
 
     def get_question_text(self, obj):
         return obj.question.text
+
+class AnswerOptionNestedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnswerOption
+        fields = ['label', 'text', 'is_correct']
+
+class QuestionWithOptionsSerializer(serializers.ModelSerializer):
+    options = AnswerOptionNestedSerializer(many=True)
+    test_id = serializers.IntegerField()
+
+    class Meta:
+        model = Question
+        fields = ['id', 'text', 'test_id', 'options']
+
+    def create(self, validated_data):
+        options_data = validated_data.pop('options')
+        test_id = validated_data.pop('test_id')
+        test = Test.objects.get(id=test_id)
+        question = Question.objects.create(test=test, **validated_data)
+        for option_data in options_data:
+            AnswerOption.objects.create(question=question, **option_data)
+        return question
 
 class AchievementSerializer(serializers.ModelSerializer):
     class Meta:
@@ -209,3 +226,10 @@ class SubmitTestSerializer(serializers.Serializer):
 
         result.update_score()
         return result
+
+
+
+class TestSubmissionLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TestSubmissionLog
+        fields = ['test', 'correct_answers']

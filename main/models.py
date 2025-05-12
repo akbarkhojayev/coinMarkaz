@@ -68,6 +68,7 @@ class Test(models.Model):
     description = models.TextField(blank=True)
     created_by = models.ForeignKey(Mentor, on_delete=models.CASCADE)
     duration_minutes = models.PositiveIntegerField(default=30)
+    groups = models.ManyToManyField(Group)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -75,25 +76,39 @@ class Test(models.Model):
 
 
 class Question(models.Model):
-    test = models.ForeignKey(Test, related_name='questions', on_delete=models.CASCADE)
-    text = models.TextField()
+    test = models.ForeignKey('Test', related_name='questions', on_delete=models.CASCADE)
+    text = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='questions/', blank=True, null=True)
+
+    def clean(self):
+        if not self.text and not self.image:
+            raise ValidationError('Text yoki image maydonlaridan biri to‘ldirilishi shart.')
 
     def __str__(self):
-        return self.text
+        return self.text if self.text else f"Image Question (ID: {self.id})"
+
 
 
 class AnswerOption(models.Model):
     question = models.ForeignKey(Question, related_name='options', on_delete=models.CASCADE)
     label = models.CharField(max_length=1, choices=[('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D')])
-    text = models.CharField(max_length=255)
+    text = models.CharField(max_length=255 , blank=True, null=True)
+    image = models.ImageField(upload_to='answers/', blank=True, null=True)
     is_correct = models.BooleanField(default=False)
+
+    def clean(self):
+        if not self.text and not self.image:
+            raise ValidationError("Text yoki image maydonlaridan biri to'ldirilishi shart")
 
     @property
     def test(self):
         return self.question.test
 
+
     def __str__(self):
         return f"{self.question.text[:30]}... ({self.label})"
+
+
 
 
 class StudentTestResult(models.Model):
@@ -123,6 +138,7 @@ class StudentTestResult(models.Model):
     def __str__(self):
         return f"{self.student.name} - {self.test.title} - {self.score} ball"
 
+
 class StudentAnswer(models.Model):
     result = models.ForeignKey(StudentTestResult, related_name='answers', on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
@@ -150,7 +166,6 @@ class StudentAnswer(models.Model):
 
     def __str__(self):
         return f"{self.result.student.name}: {self.question.text[:30]} → {self.answer_option.label}"
-
 class GivePoint(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     mentor = models.ForeignKey(Mentor, on_delete=models.CASCADE)
@@ -177,10 +192,25 @@ class GivePoint(models.Model):
         super().save(*args, **kwargs)
 
 class Achievement(models.Model):
-    image = models.ImageField(upload_to='media/achievements/', null=True, blank=True)
+    image = models.ImageField(upload_to='achievements/', null=True, blank=True)
     name = models.CharField(max_length=255)
     amount = models.PositiveIntegerField(default=0)
     point_price = models.PositiveIntegerField()
 
     def __str__(self):
         return self.name
+
+
+class TestSubmissionLog(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    test = models.ForeignKey(Test, on_delete=models.CASCADE)
+    correct_answers = models.IntegerField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student_id', 'test_id')
+
+    def __str__(self):
+        return f"Student {self.student_id} submitted test {self.test_id}"
+
+

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-xvv5n41yx15r@#as5dme&+^cmnyi_mbm8rupe5@8i79g!xk5mk
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["eurocoin.uz" , "www.eurocoin.uz"]
 
 
 # Application definition
@@ -116,12 +116,25 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'myproject_db',
+        'USER': 'mysuperuser',
+        'PASSWORD': 'mypassword',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
+
 
 
 # JAZZMIN_SETTINGS = {
@@ -144,6 +157,7 @@ JAZZMIN_SETTINGS = {
     "site_brand": "Euro Admin",
     "welcome_sign": "Assalomu alaykum!",
     "site_logo": "images/logo.png",
+    "site_icon": "images/icon.png",
     "search_model": "main.Student",
     "topmenu_links": [
         {"model": "main.Student"},
@@ -190,7 +204,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tashkent'
 
 USE_I18N = True
 
@@ -201,6 +215,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+STATICFILES_DIRS = ('/home/CoinMarkaz/eurocoin.uz/django/static_files',)
+STATIC_ROOT = '/home/CoinMarkaz/eurocoin.uz/django/static'
+MEDIA_URL = 'media/'
+MEDIA_ROOT = '/home/CoinMarkaz/eurocoin.uz/django/media'
 
 if DEBUG:
     STATICFILES_DIRS = [BASE_DIR / 'static']

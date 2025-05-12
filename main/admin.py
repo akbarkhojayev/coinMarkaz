@@ -119,7 +119,7 @@ class AnswerCountFilter(SimpleListFilter):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ("text", "test", "answer_count")
+    list_display = ("test", "answer_count", "text")
     search_fields = ('text', 'test__title')
     list_filter = ("test__title", AnswerCountFilter)
     ordering = ('test',)
@@ -147,25 +147,6 @@ class StudentTestResultAdmin(admin.ModelAdmin):
 
 admin.site.register(StudentTestResult, StudentTestResultAdmin)
 
-
-class StudentAnswerAdmin(admin.ModelAdmin):
-    list_display = ('result', 'question', 'answer_option', 'is_correct')
-    search_fields = ('result__student__name', 'question__text')
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "selected_option":
-
-            question_id = request.GET.get('question')
-            if question_id:
-                kwargs["queryset"] = AnswerOption.objects.filter(question_id=question_id)
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-
-    list_filter = ('question',)
-
-admin.site.register(StudentAnswer, StudentAnswerAdmin)
-
-
 class GivePointAdmin(admin.ModelAdmin):
     list_display = ('student', 'mentor', 'amount', 'point_type', 'created_at')
     search_fields = ('student__name', 'mentor__name')
@@ -181,6 +162,5 @@ class AchievementAdmin(admin.ModelAdmin):
     ordering = ('-amount',)
 
 admin.site.register(Achievement, AchievementAdmin)
-
-
+admin.site.register(TestSubmissionLog)
 
